@@ -1,7 +1,7 @@
 import torch
 
 from abc import ABC, abstractmethod
-from transformers import AutoModelForCausalLM, AutoTokenizer, StoppingCriteria, StoppingCriteriaList
+from transformers import AutoModelForCausalLM, AutoTokenizer, StoppingCriteria, StoppingCriteriaList, pipeline
 
 class LLM(ABC):
     @abstractmethod
@@ -23,7 +23,7 @@ class StablelmLLM(LLM):
         self._model.half().cuda()
 
         self._prompt = """<|SYSTEM|>Please read below text, understand it and answer the questions.
-        
+
         {context}
 
         <|USER|>{query}
@@ -42,3 +42,19 @@ class StablelmLLM(LLM):
           pad_token_id=self._tokenizer.eos_token_id
         )
         return self._tokenizer.decode(tokens[0], skip_special_tokens=True)[prompt_len:]
+
+class DollyLLM(LLM):
+    def __init__(self, model_name: str):
+        self._pipe = pipeline(model=model_name, torch_dtype=torch.bfloat16, trust_remote_code=True, device_map="auto")
+        self._prompt = """Please read below text, understand it and answer the questions.
+
+        {context}
+
+        Question: {query}
+        Answer: """
+
+    def generate(self, context: str, query: str) -> str:
+        prompt = self._prompt.format(context=context, query=query)
+        prompt_len = len(prompt)
+        res = self._pipe(prompt)
+        return res[0]["generated_text"]

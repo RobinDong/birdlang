@@ -4,7 +4,7 @@ import tqdm
 from embeddings import SentenceEmbeddings
 from storage import FaissStorage
 from splitter import GutenbergSplitter
-from llm import StablelmLLM
+from llm import StablelmLLM, DollyLLM
 
 with open("/home/robin/Documents/pompeii.txt", "r") as fp:
     content = fp.read()
@@ -28,6 +28,7 @@ fs.build_index()
 query = "Who is Ariston?"
 ans = fs.get(se.generate_embedding(query), 5)
 print(ans)
-sl = StablelmLLM("StabilityAI/stablelm-tuned-alpha-3b")
+#sl = StablelmLLM("StabilityAI/stablelm-tuned-alpha-3b")
+sl = DollyLLM("databricks/dolly-v2-3b")
 resp = sl.generate("\n\n".join(ans), query)
 print(resp)

@@ -1,4 +1,5 @@
 sentence_transformers
 transformers
+accelerate
 torch
 faiss-cpu
