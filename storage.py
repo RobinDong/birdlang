@@ -34,7 +34,7 @@ class FaissStorage(Storage):
     def get(self, embedding, k: int):
         scores, indices = self._index.search(np.array([embedding]), k)
         ans = []
-        for idx in indices[0]:
+        for idx in sorted(indices[0]):
             if idx == -1:
                 continue
             ans.append(self._map[idx])
