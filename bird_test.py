@@ -1,17 +1,17 @@
 import time
 import tqdm
+import sys
 
 from embeddings import SentenceEmbeddings
 from storage import FaissStorage
-from splitter import GutenbergSplitter
+from splitter import BirdSplitter
 from llm import StablelmLLM, DollyLLM, T5LLM
 
-with open("/home/robin/Documents/bird.txt", "r") as fp:
+with open("/home/robin/Documents/jsonEN/1101.json", "r") as fp:
     content = fp.read()
 
-splitter = GutenbergSplitter(256)
+splitter = BirdSplitter(400)
 sentences = splitter.split(content)
-print(sentences)
 print(max([len(item) for item in sentences]))
 print(min([len(item) for item in sentences]))
 
@@ -25,11 +25,11 @@ for sent in tqdm.tqdm(sentences):
     em = se.generate_embedding(sent)
     fs.put(se.generate_embedding(sent), sent)
 fs.build_index()
-query = "Is there any tawny owl in Asia?"
+query = "Is there any hawk in Asia?"
 ans = fs.get(se.generate_embedding(query), 4)
 print(ans)
 #sl = StablelmLLM("StabilityAI/stablelm-tuned-alpha-3b")
 #sl = DollyLLM("databricks/dolly-v2-3b")
 sl = T5LLM("google/flan-t5-large")
-resp = sl.generate("\n\n".join(ans), query)
+resp = sl.generate("".join(ans), query)
 print(resp)
