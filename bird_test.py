@@ -1,5 +1,6 @@
 import time
 import tqdm
+import os
 import sys
 
 from embeddings import SentenceEmbeddings
@@ -7,29 +8,48 @@ from storage import FaissStorage
 from splitter import BirdSplitter
 from llm import StablelmLLM, DollyLLM, T5LLM
 
-with open("/home/robin/Documents/jsonEN/1101.json", "r") as fp:
-    content = fp.read()
+INDEX_FILE = ".birds.faiss"
 
-splitter = BirdSplitter(400)
-sentences = splitter.split(content)
-print(max([len(item) for item in sentences]))
-print(min([len(item) for item in sentences]))
+if os.path.exists(INDEX_FILE):
+    fs = FaissStorage()
+    fs.load(INDEX_FILE)
+    se = SentenceEmbeddings()
+else:
+    sentences = []
+    data_dir = "/home/robin/Documents/jsonEN/"
+    for filename in tqdm.tqdm(os.listdir(data_dir)):
+        with open(data_dir + filename, "r") as fp:
+            content = fp.read()
 
-se = SentenceEmbeddings()
-begin = time.time()
-em = se.generate_embedding(sentences[0])
-print(em.shape, time.time() - begin)
+        splitter = BirdSplitter(400)
+        res = splitter.split(content)
+        if len(res) <= 0:
+            continue
+        if min([len(item) for item in res]) < 12:
+            print(f"filename: {filename}")
+            print(res)
+        sentences += res
 
-fs = FaissStorage(em.shape[0])
-for sent in tqdm.tqdm(sentences):
-    em = se.generate_embedding(sent)
-    fs.put(se.generate_embedding(sent), sent)
-fs.build_index()
-query = "Is there any hawk in Asia?"
-ans = fs.get(se.generate_embedding(query), 4)
-print(ans)
-#sl = StablelmLLM("StabilityAI/stablelm-tuned-alpha-3b")
-#sl = DollyLLM("databricks/dolly-v2-3b")
-sl = T5LLM("google/flan-t5-large")
-resp = sl.generate("".join(ans), query)
-print(resp)
+    se = SentenceEmbeddings()
+    begin = time.time()
+    em = se.generate_embedding(sentences[0])
+
+    fs = FaissStorage(em.shape[0])
+    for sent in tqdm.tqdm(sentences):
+        em = se.generate_embedding(sent)
+        fs.put(se.generate_embedding(sent), sent)
+    fs.build_index()
+    fs.save(INDEX_FILE)
+
+for query in [
+        "Is there any hawk living in Asia?",
+        "What's the larget type of bird on the earth?",
+        ]:
+    ans = fs.get(se.generate_embedding(query), 5)
+    print(ans)
+    #sl = StablelmLLM("StabilityAI/stablelm-tuned-alpha-3b")
+    #sl = DollyLLM("databricks/dolly-v2-3b")
+    sl = T5LLM("google/flan-t5-large")
+    resp = sl.generate("".join(ans), query)
+    print(f"Question: {query}")
+    print(f"Answer: {resp}")

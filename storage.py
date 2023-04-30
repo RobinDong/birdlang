@@ -1,5 +1,6 @@
 import faiss
 import numpy as np
+import pickle
 
 from abc import ABC, abstractmethod
 
@@ -16,8 +17,16 @@ class Storage(ABC):
     def get(self, embedding, k: int):
         pass
 
+    @abstractmethod
+    def save(self, filename: str):
+        pass
+
+    @abstractmethod
+    def load(self, filename: str):
+        pass
+
 class FaissStorage(Storage):
-    def __init__(self, dimention: int):
+    def __init__(self, dimention: int = 1024):
         self._index = faiss.IndexFlatL2(dimention)
         self._matrix = []
         self._map = {}
@@ -39,3 +48,16 @@ class FaissStorage(Storage):
                 continue
             ans.append(self._map[idx])
         return ans
+
+    def save(self, filename: str):
+        array = faiss.serialize_index(self._index)
+        with open(filename, "wb") as fp:
+            obj = {"seq_id": self._seq_id, "map": self._map, "index": array}
+            fp.write(pickle.dumps(obj))
+
+    def load(self, filename: str):
+        with open(filename, "rb") as fp:
+            obj = pickle.loads(fp.read())
+        self._seq_id = obj["seq_id"]
+        self._map = obj["map"]
+        self._index = faiss.deserialize_index(obj["index"])
