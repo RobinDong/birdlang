@@ -49,7 +49,7 @@ for query in [
     print(ans)
     #sl = StablelmLLM("StabilityAI/stablelm-tuned-alpha-3b")
     #sl = DollyLLM("databricks/dolly-v2-3b")
-    sl = T5LLM("google/flan-t5-large")
+    sl = T5LLM("lmsys/fastchat-t5-3b-v1.0")
     resp = sl.generate("".join(ans), query)
     print(f"Question: {query}")
     print(f"Answer: {resp}")
