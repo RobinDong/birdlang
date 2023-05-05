@@ -9,7 +9,7 @@ class Embeddings(ABC):
 
 class SentenceEmbeddings(Embeddings):
     def __init__(self):
-        self._model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2").half().cuda()
+        self._model = SentenceTransformer("sentence-transformers/all-mpnet-base-v2")
         #self._model = AutoModelForCausalLM.from_pretrained("stabilityai/stablelm-tuned-alpha-3b").half().cuda()
 
     def generate_embedding(self, sentence: str):
