@@ -15,6 +15,8 @@ var stopButton = document.getElementById("stopButton");
 //add events to those 2 buttons
 recordButton.addEventListener("click", startRecording);
 stopButton.addEventListener("click", stopRecording);
+//add event to 'ask' button
+askButton.addEventListener("click", startAsk);
 
 function startRecording() {
 	console.log("recordButton clicked");
@@ -91,6 +93,42 @@ function stopRecording() {
 
 	//create the wav blob and pass it on to createDownloadLink
 	rec.exportWAV(createDownloadLink);
+}
+
+function startAsk() {
+	console.log("start Ask");
+	askButton.disabled = true;
+	recordButton.disabled = true;
+	input = document.getElementById("inputText")
+	if (input.value.trim().length == 0) {
+		return
+	}
+
+	var xhr=new XMLHttpRequest();
+	xhr.onload=function(e) {
+		if(this.readyState === 4) {
+			// console.log("Server returned: ",e.target.responseText);
+			var li = document.createElement('li');
+			li.appendChild(document.createTextNode("Q:" + input.value));
+			li.appendChild(document.createElement("br"));
+			li.appendChild(document.createTextNode("A:" + e.target.responseText));
+			recordingsList.appendChild(li);
+			askButton.disabled = false;
+			recordButton.disabled = false;
+		}
+	};
+	var fd=new FormData();
+	fd.append("username", "robin");
+	fd.append("question", input.value);
+	xhr.open("POST","whisper/",true);
+	xhr.send(fd);
+}
+
+function clearTextarea() {
+	var textarea = document.getElementById("inputText");
+	if (textarea.value == "Enter your question here...") {
+		textarea.value = "";
+	}
 }
 
 function createDownloadLink(blob) {
