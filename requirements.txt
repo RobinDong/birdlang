@@ -4,3 +4,6 @@ accelerate
 torch
 faiss-cpu
 flask
+gunicorn
+openai
+openai-whisper
